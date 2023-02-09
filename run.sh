@@ -1,0 +1,13 @@
+srun -K --ntasks=1 --gpus-per-task=1 \
+--cpus-per-gpu=4 \
+-p V100-32GB-SDS \
+--mem=64G \
+--container-mounts=/netscratch:/netscratch,/ds:/ds,`pwd`:`pwd` \
+--container-image=/netscratch/enroot/nvcr.io_nvidia_pytorch_22.01-py3.sqsh \
+--container-workdir=`pwd` \
+--export="NCCL_SOCKET_IFNAME=bond,NCCL_IB_HCA=mlx5" \
+--mail-type=ALL \
+--mail-user=ankit.agrawal@dfki.de \
+--job-name debug \
+--time=60 \
+--pty bash
