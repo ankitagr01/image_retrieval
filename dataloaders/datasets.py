@@ -101,8 +101,8 @@ class SOP(BaseDataset):
 
 class SOP_TEST(Dataset):
     def __init__(self):
-        self.image_root = '/home/joshi/img_ret/dataset'
-        self.test_label = '/home/joshi/img_ret/dataset/Ebay_test.txt'
+        self.image_root = '/ds/images/Stanford_Online_Products/'
+        self.test_label = '/ds/images/Stanford_Online_Products/Ebay_test.txt'
         self.img_encoder = TransformerEncoder("swinv2", "base")
         self.image_ids, self.class_ids, self.super_class_ids, self.im_paths = [],[],[],[]
 
