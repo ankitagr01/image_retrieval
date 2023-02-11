@@ -10,6 +10,20 @@ from model import TransformerEncoder
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
+# pip install faiss-gpu==1.6.3
+# pip install transformers
+# pip install wandb
+# pip install dill
+
+# pip install faiss
+# pip install faiss-cpu
+# pip install faiss-gpu==1.6.3
+# pip uninstall faiss-cpu
+
+
+# sys.executable('-m', 'pip', 'install', 'transformers')
+import subprocess
+
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 if 'cuda' not in device:
@@ -56,11 +70,28 @@ def img_ret_test():
                                   epochs=3,
                                   learning_rate=1e-4,)
 
+    # #select pretrained resnet50 model for testing
+    # model = Resnet50(embedding_size=512, pretrained=True, is_norm=1, bn_freeze = 1)
+
     trainer.test(test_loader)
 
 
 
 
 if __name__ == "__main__":
-    img_ret()
-    # img_ret_test()
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "transformers"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "faiss-gpu==1.6.3"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "wandb"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "dill"])
+
+
+    # process output with an API in the subprocess module:
+    reqs = subprocess.check_output([sys.executable, '-m', 'pip',
+    'freeze'])
+    installed_packages = [r.decode().split('==')[0] for r in reqs.split()]
+
+    print(installed_packages)
+
+    
+    # img_ret()
+    img_ret_test()

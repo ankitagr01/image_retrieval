@@ -20,7 +20,7 @@ class BaseDataset(Dataset):
 
     def __len__(self,):
         return len(set(self.class_ids))*5
-        # return 5000
+        # return 50
 
     def __getitem__(self, idx):
         
@@ -116,7 +116,7 @@ class SOP_TEST(Dataset):
 
     def __len__(self,):
         # return len(self.class_ids)
-        return 5000
+        return 100
 
     def __getitem__(self, idx):
         return [self._get_transformed_image(self.im_paths[idx]), self.class_ids[idx]]
