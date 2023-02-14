@@ -115,8 +115,8 @@ class SOP_TEST(Dataset):
                 self.im_paths.append(os.path.join(self.image_root, path))
 
     def __len__(self,):
-        # return len(self.class_ids)
-        return 100
+        return len(self.class_ids)
+        # return 100
 
     def __getitem__(self, idx):
         return [self._get_transformed_image(self.im_paths[idx]), self.class_ids[idx]]

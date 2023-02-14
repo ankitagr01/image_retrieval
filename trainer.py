@@ -97,10 +97,14 @@ class ImageRetrievalTrainer(object):
         if train_dataloader is None or val_dataloader is None:
             raise ValueError('Either of train_dataloader and val_dataloader cannot be None.')
 
+        train_start_time = time.time()
         print(f'\nFinetuning the model for {self.epochs} epochs...')
 
         with tqdm(total=self.epochs, desc='Epochs') as pbar:
             for epoch in range(self.epochs):
+                # compute epoch time
+                start_time = time.time()
+
                 # Training
                 train_loss = self.train_epoch(train_dataloader)
 
@@ -117,11 +121,21 @@ class ImageRetrievalTrainer(object):
 
                 # save_path = '../models/'
                 save_path = 'models_ckpt/'
-                model_name = f'model_v1_epoch_{epoch+1}'
-                self.save_model(save_path, model_name)
+                
+                # time taken for each epoch
+                epoch_time = time.time() - start_time
+                print(f'Time taken for epoch {epoch+1} is {epoch_time} seconds.')
+                
+                # Save the model
+                self.save_model(save_path, epoch=epoch,)
 
         # Finish the wandb run
         wandb.finish()
+
+        # Total time taken for training
+        total_time = time.time() - train_start_time
+        print(f'Total time taken for training is {total_time} seconds.')
+
 
     def train_epoch(self, train_dataloader:torch_data.DataLoader) -> float:
         """ Train the model for one epoch. """
@@ -205,8 +219,15 @@ class ImageRetrievalTrainer(object):
     def test(self, test_dataloader:torch_data.DataLoader) -> None:
         start_total = time.time()
         """ Test the model. """
-        print(f'\nTesting the model...')	
+        print(f'\nTesting the model...')
+
+        # load model from stae_dict
+        self.model.load_state_dict(torch.load('models_ckpt/model_v1_epoch_15'))
+        # self.model = torch.load('models_ckpt/model_v1_epoch_1.pt')
+# 
+
         self.model.eval()
+        print('here')
 
         # Get the embeddings for the test set
         test_embeddings = []
@@ -223,9 +244,11 @@ class ImageRetrievalTrainer(object):
         test_embeddings = torch.cat(test_embeddings, dim=0)
         test_labels = torch.cat(test_labels, dim=0)
 
+        print('herefvdf')
         print('test_embeddings.shape: ', test_embeddings.shape)
-        print('test_labels.shape: ', test_labels.shape)
-        print('test_labels: ', test_labels)
+        # return True
+        # print('test_labels.shape: ', test_labels.shape)
+        # print('test_labels: ', test_labels)
 
         # self.model.to('cpu')
 
@@ -233,11 +256,6 @@ class ImageRetrievalTrainer(object):
         recall_1, recall_10, recall_100, recall_1000, map_ = self.compute_recall_map(test_embeddings, test_labels)
 
         print(f'Recall@1: {recall_1}, Recall@10: {recall_10}, Recall@100: {recall_100}, Recall@1000: {recall_1000}, MAP: {map_}')
-
-        # # Compute the recall and MAP
-        # recall_1, recall_10 = self.compute_recall_map(test_embeddings, test_labels)
-
-        # print(f'Recall@1: {recall_1}, Recall@10: {recall_10}')
 
         print(f'Total time taken for testing: {time.time() - start_total} seconds')	
 
@@ -265,6 +283,8 @@ class ImageRetrievalTrainer(object):
         print('inside faiss')
         log.debug('****inside faiss')
 
+        faiss_index_time = time.time()
+
         # Create a Faiss index
         index = faiss.IndexFlatL2(test_embeddings.shape[1]) # L2 distance
         print('index_cpu', index)
@@ -278,16 +298,23 @@ class ImageRetrievalTrainer(object):
         print('index_gpu', index)
         log.debug(f'****index_gpu: {index}')
 
-
+        print(f'Total time taken to make faiss index: {time.time() - faiss_index_time} seconds')
+        faiss_add_time = time.time()
 
         # Add the test embeddings to the index
         index.add(test_embeddings.cpu().numpy())
+
+        print(f'Total time taken to add in faiss index: {time.time() - faiss_add_time} seconds')
+        faiss_search_time = time.time()
 
         print('index total length', index.ntotal)
         log.debug(f'****index total length: {index.ntotal}')
 
         # Get the top 1000 nearest neighbors for each test embedding
-        D, I = index.search(test_embeddings.cpu().numpy(), 1000)
+        D, I = index.search(test_embeddings.cpu().numpy(), 1001)
+
+        print(f'Total time taken to search in faiss index: {time.time() - faiss_search_time} seconds')
+        recall_start_time = time.time()
 
         # Compute the recall and MAP
         for i in range(test_embeddings.shape[0]):
@@ -295,29 +322,30 @@ class ImageRetrievalTrainer(object):
             neighbors = I[i]
             # Get the labels of the nearest neighbors
             neighbor_labels = test_labels[neighbors]
-            print('neighbors: ', neighbors)
-            print('neighbor_labels: ', neighbor_labels)
+            # neighbor_labels.pop(0)
+            # print('neighbors: ', neighbors)
+            # print('neighbor_labels: ', neighbor_labels)
             # Get the label of the ith test embedding
             label = test_labels[i]
-            print('label: ', label)
-            print('neighbor_labels1: ', neighbor_labels[:1])
-            print('neighbor_labels10: ', neighbor_labels[:10])
-            print('neighbor_labels100: ', neighbor_labels[:100])
+            # print('label: ', label)
+            # print('neighbor_labels1: ', neighbor_labels[:1])
+            # print('neighbor_labels10: ', neighbor_labels[:10])
+            # print('neighbor_labels100: ', neighbor_labels[:100])
 
-            break 
+            # break 
             # Compute the recall and MAP
-            if label in neighbor_labels[:1]:
+            if label in neighbor_labels[1:2]:
                 recall_1 += 1
-            if label in neighbor_labels[:10]:
+            if label in neighbor_labels[1:11]:
                 recall_10 += 1
-            if label in neighbor_labels[:100]:
+            if label in neighbor_labels[1:101]:
                 recall_100 += 1
-            if label in neighbor_labels[:1000]:
+            if label in neighbor_labels[1:1001]:
                 recall_1000 += 1
 
             # Compute the MAP
-            for j in range(1000):
-                if label in neighbor_labels[:j+1]:
+            for j in range(1001):
+                if label in neighbor_labels[1:j+1]:
                     map_ += 1 / (j+1)
                     break
         
@@ -329,12 +357,14 @@ class ImageRetrievalTrainer(object):
         map_ /= test_embeddings.shape[0]
 
         # return recall_1, recall_10
+        print(f'Total time taken to compute recall and MAP: {time.time() - recall_start_time} seconds')
+        
         log.debug(f'****recalls1: {recall_1}, recalls10: {recall_10}, recalls100: {recall_100}, recalls1000: {recall_1000}, map: {map_}')
         return recall_1, recall_10, recall_100, recall_1000, map_
 
 
-    def save_model(self, save_path:str=None,
-                    model_name:str=None) -> None:
+    def save_model(self, save_path:str=None, epoch:int=None,
+                    ) -> None:
         """ Save the finetuned model & its weights. """
         
         if save_path is None:
@@ -342,10 +372,19 @@ class ImageRetrievalTrainer(object):
 
         if not os.path.exists(save_path):
             os.makedirs(save_path)
+        model_name = f'model_v1_epoch_{epoch+1}'
 
-        # Save the model object as a pickle file
-        with open(os.path.join(save_path, model_name + '.pkl'), 'wb') as f:
-            pickle.dump(self.model, f)
+        ## Method-1  # Save the model object as a pickle file
+        # with open(os.path.join(save_path, model_name + '.pkl'), 'wb') as f:
+        #     pickle.dump(self.model, f)
+
+        ## Method-2 save the model directly. (not recommended)
+        # torch.save(self.model, os.path.join(save_path, model_name + '.pt'))
+
         
-        print(f"Model is saved in: {save_path}\n")
+        # Method-3 Save the model weights and optimizer state (recommended)
+        save_dir = os.path.join(save_path, model_name)
+        torch.save(self.model.state_dict(), save_dir)
+        # torch.save({'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict()}, save_dir)
         
+        print(f"Model is saved in: {save_path} {model_name}\n")

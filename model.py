@@ -38,13 +38,13 @@ class BaseEncoder(nn.Module):
             image_processor = AutoImageProcessor.from_pretrained(model_str)
 
         elif model_size == "base":
-            configuration = Swinv2Config()
-            model = Swinv2Model(configuration)
-            configuration = model.config
+            # configuration = Swinv2Config()
+            # model = Swinv2Model(configuration)
+            # configuration = model.config
 
             model_str = "microsoft/swinv2-base-patch4-window16-256"
-            # model = Swinv2Model.from_pretrained(model_str,
-            #                                     output_hidden_states=True)
+            model = Swinv2Model.from_pretrained(model_str,
+                                                output_hidden_states=True)
             image_processor = AutoImageProcessor.from_pretrained(model_str)
 
         elif model_size == "large":
