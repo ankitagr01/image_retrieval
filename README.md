@@ -16,5 +16,5 @@ Swinv2Model  |Finetuned(Epoch:6) |  Triplet |   72.35    |   85.10    |   92.68 
 Swinv2Model  |Finetuned(Epoch:10)|  Triplet |   75.22    |   87.39    |   93.76    |   97.60    | 40.78
 
 
-Last Edit: 13-Feb-2023
+Last Edit: 14-Feb-2023
 
