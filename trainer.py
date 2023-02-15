@@ -223,11 +223,7 @@ class ImageRetrievalTrainer(object):
 
         # load model from stae_dict
         self.model.load_state_dict(torch.load('models_ckpt/model_v1_epoch_15'))
-        # self.model = torch.load('models_ckpt/model_v1_epoch_1.pt')
-# 
-
         self.model.eval()
-        print('here')
 
         # Get the embeddings for the test set
         test_embeddings = []
@@ -244,11 +240,7 @@ class ImageRetrievalTrainer(object):
         test_embeddings = torch.cat(test_embeddings, dim=0)
         test_labels = torch.cat(test_labels, dim=0)
 
-        print('herefvdf')
         print('test_embeddings.shape: ', test_embeddings.shape)
-        # return True
-        # print('test_labels.shape: ', test_labels.shape)
-        # print('test_labels: ', test_labels)
 
         # self.model.to('cpu')
 
@@ -266,19 +258,6 @@ class ImageRetrievalTrainer(object):
         # Compute the recall and MAP
         recall_1, recall_10, recall_100, recall_1000, map_ = 0, 0, 0, 0, 0
 
-        # #new faiss:
-        # res = faiss.StandardGpuResources()  # use a single GPU
-        # print('inside faiss')
-        # log.debug('****inside faiss')
-        # # make a flat (CPU) index
-        # index = faiss.IndexFlatL2(test_embeddings.shape[1])
-        # print('index_cpu', index)
-        # log.debug(f'****index_cpu: {index}')
-        # # make it into a gpu index
-        # index = faiss.index_cpu_to_gpu(res, 0, index)
-        # print('index_gpu', index)
-        # log.debug(f'****index_gpu: {index}')
-        
         
         print('inside faiss')
         log.debug('****inside faiss')
@@ -290,10 +269,12 @@ class ImageRetrievalTrainer(object):
         print('index_cpu', index)
         log.debug(f'****index_cpu: {index}')
 
+        # Get the number of GPUs
         ngpus = faiss.get_num_gpus()
         print("number of GPUs:", ngpus)
         log.debug(f'****number of GPUs: {ngpus}')
 
+        # Make the index into a GPU index
         index = faiss.index_cpu_to_all_gpus(index) # make it a GPU index
         print('index_gpu', index)
         log.debug(f'****index_gpu: {index}')
@@ -314,25 +295,21 @@ class ImageRetrievalTrainer(object):
         D, I = index.search(test_embeddings.cpu().numpy(), 1001)
 
         print(f'Total time taken to search in faiss index: {time.time() - faiss_search_time} seconds')
+        print(I)
         recall_start_time = time.time()
 
         # Compute the recall and MAP
         for i in range(test_embeddings.shape[0]):
             # Get the top 1000 nearest neighbors for the ith test embedding
             neighbors = I[i]
+            
             # Get the labels of the nearest neighbors
             neighbor_labels = test_labels[neighbors]
-            # neighbor_labels.pop(0)
-            # print('neighbors: ', neighbors)
-            # print('neighbor_labels: ', neighbor_labels)
+
             # Get the label of the ith test embedding
             label = test_labels[i]
-            # print('label: ', label)
-            # print('neighbor_labels1: ', neighbor_labels[:1])
-            # print('neighbor_labels10: ', neighbor_labels[:10])
-            # print('neighbor_labels100: ', neighbor_labels[:100])
 
-            # break 
+            # TODO: create a seperate function for recall@k calculation
             # Compute the recall and MAP
             if label in neighbor_labels[1:2]:
                 recall_1 += 1
@@ -374,15 +351,7 @@ class ImageRetrievalTrainer(object):
             os.makedirs(save_path)
         model_name = f'model_v1_epoch_{epoch+1}'
 
-        ## Method-1  # Save the model object as a pickle file
-        # with open(os.path.join(save_path, model_name + '.pkl'), 'wb') as f:
-        #     pickle.dump(self.model, f)
-
-        ## Method-2 save the model directly. (not recommended)
-        # torch.save(self.model, os.path.join(save_path, model_name + '.pt'))
-
-        
-        # Method-3 Save the model weights and optimizer state (recommended)
+        # Save the model weights and optimizer state (recommended)
         save_dir = os.path.join(save_path, model_name)
         torch.save(self.model.state_dict(), save_dir)
         # torch.save({'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict()}, save_dir)

@@ -1,12 +1,11 @@
 import sys
-sys.path.append('../img_ret')
+sys.path.append('..')
 
 import subprocess
 subprocess.check_call([sys.executable, "-m", "pip", "install", "transformers"])
 subprocess.check_call([sys.executable, "-m", "pip", "install", "faiss-gpu==1.6.3"])
 subprocess.check_call([sys.executable, "-m", "pip", "install", "wandb"])
 subprocess.check_call([sys.executable, "-m", "pip", "install", "dill"])
-
 
 # # process output with an API in the subprocess module:
 # reqs = subprocess.check_output([sys.executable, '-m', 'pip',
@@ -24,10 +23,6 @@ from model import TransformerEncoder
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-# pip install faiss-gpu==1.6.3
-# pip install transformers
-# pip install wandb
-# pip install dill
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
@@ -44,7 +39,7 @@ val_transforms = transforms.Compose([
     transforms.Resize((224, 224)),
 ])
 
-def img_ret():
+def img_ret_train():
     train_sop_dataset = SOP(train_transforms, split='train')
     val_sop_dataset = SOP(val_transforms, split='val')
 
@@ -75,14 +70,12 @@ def img_ret_test():
                                   epochs=15,
                                   learning_rate=1e-4,)
 
-    # #select pretrained resnet50 model for testing
-    # model = Resnet50(embedding_size=512, pretrained=True, is_norm=1, bn_freeze = 1)
-
     trainer.test(test_loader)
 
 
-
-
 if __name__ == "__main__":
-    # img_ret()
+    # for training
+    # img_ret_train()
+
+    # for testing
     img_ret_test()

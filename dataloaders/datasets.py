@@ -20,7 +20,6 @@ class BaseDataset(Dataset):
 
     def __len__(self,):
         return len(set(self.class_ids))*5
-        # return 50
 
     def __getitem__(self, idx):
         
@@ -82,10 +81,10 @@ class SOP(BaseDataset):
         random.shuffle(self.classes)
 
         if self.split == 'train':
-            self.classes = self.classes[0:9000] # almost 80%
+            self.classes = self.classes[0:9000] #  80% train
             
         elif self.split == 'val':
-            self.classes = self.classes[9000:11318] # almost 20%
+            self.classes = self.classes[9000:11318] #  20% val
 
         super(SOP, self).__init__(self.transforms,)
 
@@ -131,6 +130,7 @@ class SOP_TEST(Dataset):
         # img = self.transforms(img)
         image = self.img_encoder.image_processor(img, return_tensors="pt")
         return image
+
 
 
 # transform:
