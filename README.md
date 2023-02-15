@@ -69,7 +69,7 @@ stanford_online_products
 6. Training performed in single A100 40GB GPU.
 7. Weights and Baises(wandb) for monitoring
 
-To run the experiments:
+__To run the experiments__:
 1. Install packages listed in requirements.txt
 2. Download SOP dataset to the Dataloaders folder and check for the paths in datasets.py
 3. Update the wandb username details for monitoring
@@ -94,10 +94,10 @@ Swinv2Model  |Finetuned(Epoch:10)|  Triplet |   __75.22__    |   __87.39__    | 
 ## 4. Model performance
 __Training time:__ Time for each epoch containing 45000 triplet samples: 1.5 hours (single A100 GPU) (https://wandb.ai/ankit_dfki/img_retrieval/runs/cuq34qrp/overview)
 
-__Inference time:__ Total time for searching each of 60502 test images in the collection of 60501 images = 7.01 seconds
+__Inference time:__ Total time for searching each of 60502 test images in the collection of 60501 images = 7.01 seconds  
 (__0.00011 seconds per test quesry image__)
 
-__Embedding dimensions:__ 1064
+__Embedding dimensions:__ 1064   
 __Training GPU memory:__ 30 GB
 
 __Faiss__: Indexing and searching for similarity matching and retrieval.
