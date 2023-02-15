@@ -114,6 +114,9 @@ __Faiss__: Indexing and searching for similarity matching and retrieval.
 6. Online training for new incoming products and incorporating user feedback should be implemented.
 
 
+![train_loss](https://user-images.githubusercontent.com/45555218/218908105-fbd0493c-c938-43d7-9dbc-64e097949865.png)
+
+
 ## 4. Tech-stack and Hardware
 
 1. Python
