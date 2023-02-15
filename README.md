@@ -52,8 +52,8 @@ Repository
 __Stanford Online Products__
 ```
 stanford_online_products
-| Ebay_train.txt (0:9000 Train images, 9000:11318 Validation images *Shuffled set*)
-| Ebay_test.txt (11318:22634 Test images)
+| Ebay_train.txt (0:9000 Train classes, 9000:11318 Validation classes *Shuffled set*)
+| Ebay_test.txt (11318:22634 Test classes, 60502 total images)
 ```
 
 
@@ -62,8 +62,8 @@ stanford_online_products
 1. We use Stanford Online Products (SOP) dataset and use the standard train-test split for image retrieval task.
 2. We use pretrained Swinv2 Transformer base model and adapt it to image retrieval task. 
 3. We finetune Swinv2model using the train-val split of SOP dataset using triplet margin loss. 
-└───For each image(anchor), we pick one image of same class (positive pair), and one image from different class (negative pair), forming a triplet sample of (anchor, positive, negative) image.
-└───Total of 9000\*5 = 45000 triplet samples for training and 11590 triplet samples for validation
+* For each image(anchor), we pick one image of same class (positive pair), and one image from different class (negative pair), forming a triplet sample of (anchor, positive, negative) image.
+* Total of 9000\*5 = 45000 triplet samples for training and 11590 triplet samples for validation
 4. We use triplet margin loss as the loss function
 5. Batch size= 16, training epochs = 15 (driven by validation set)
 6. Training performed in single A100 40GB GPU.
@@ -92,39 +92,55 @@ Swinv2Model  |Finetuned(Epoch:6) |  Triplet |   72.35    |   85.10    |   92.68 
 Swinv2Model  |Finetuned(Epoch:10)|  Triplet |   __75.22__    |   __87.39__    |   __93.76__    |   __97.60__    | __40.78__
 
 ## 4. Model performance
-Training time, inference time, 
-Faiss
-model size
-notes on deployment
-encoding dimensions
+__Training time:__ Time for each epoch containing 45000 triplet samples: 1.5 hours (single A100 GPU) (https://wandb.ai/ankit_dfki/img_retrieval/runs/cuq34qrp/overview)
+
+__Inference time:__ Total time for searching each of 60502 test images in the collection of 60501 images = 7.01 seconds
+(__0.00011 seconds per test quesry image__)
+
+__Embedding dimensions:__ 1064
+__Training GPU memory:__ 30 GB
+
+__Faiss__: Indexing and searching for similarity matching and retrieval.
+* Faiss GPU library to use GPU to compute the index search for mebeddings matching.
+* Generating index time for 60502 images: 147.12 seconds
+* Adding embedding vectors for 60502 images to the index time: 0.14 seconds
+
+### Notes on Deployment:
+1. With accuracy vs speed tradeoff: we can choose base model and embedding dimensions according. 
+2. Taking embedding dimension of 256 or 512 will be faster than 1024 used in the above implementation. 
+3. The Faiss index can be stored in cache for quick retrieval.
+4. After extracting the embedding vectors for our image catalog, there is no further need to load the model or the images into the memory. We can directly store embeddings in faiss index and use that for all retrieval in production. (This will ensure fast retrieval and less memory consumption saving cost in production deployment)
+5. Training can be performed using distributed training over the availability of multiple GPUs decreasing the training time significantly.
+6. Online training for new incoming products and incorporating user feedback should be implemented.
 
 
 ## 4. Tech-stack and Hardware
 
 1. Python
 2. Pytorch
-3. Faiss: for embeddings similarity computation
+3. Faiss-gpu: for embeddings similarity computation
 4. A100-40GB GPU for training and inference
-5. Weights and Baises (wandb)
+5. Weights and Baises (wandb) (https://wandb.ai/ankit_dfki/img_retrieval/runs/cuq34qrp/overview)
 6. srun: slurm workload manager
 7. Grafarna
 
 
 ## 5. Extension
-use hard mining sampling
-triplet loss v/s contrastive loss for representation learning
+1. use hard mining sampling
+2. triplet loss v/s contrastive loss for representation learning
+3. Better augmentations/transformations
+4. Additional linear layer on top of encoder to reduce the embeddings dimension.
+5. comparision of CPU vs GPU retrieval time (to prepare the report for deployment)
+6. Hyperparameters tuning
 
 
 
-
-
+## ToDo:
+- [ ] Fix Version in `requirements.txt`  
+- [ ] Add config file
+- [ ] Add arguments parser for training and testing scripts
+- [ ] Upload model weights for regeneration
 
 
 Last Edit: 15-Feb-2023
 
-
-
-
-Part 1: Adaptation of exisiting models for Image retrieval task.
-Part 2: Finetuning above model for image retrieval.
-Part 3: Performance comparision for both the models. 
