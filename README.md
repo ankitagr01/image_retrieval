@@ -139,7 +139,6 @@ __Faiss__: Indexing and searching for similarity matching and retrieval.
 
 
 ## ToDo:
-- [ ] Fix Version in `requirements.txt`  
 - [ ] Add config file
 - [ ] Add arguments parser for training and testing scripts
 - [ ] Upload model weights for regeneration
